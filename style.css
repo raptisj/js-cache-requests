@@ -1,0 +1,19 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  .wrapper {
+    display: grid;
+    grid-template-columns: minmax(400px, 500px) 1fr;
+    grid-gap: 24px;
+  }
+
+  .posts {
+    max-width: 600px;
+  }
+
+  .post {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 8px;
+    margin-top: 8px;
+  }
