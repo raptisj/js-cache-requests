@@ -5,6 +5,22 @@ import { fetchAndStoreUsers, fetchUser, getCachedUser } from "./api/users";
 import { fetchPostComments, fetchPosts, getCachedComments } from "./api/posts";
 import { renderComments, renderPosts, renderUser } from "./utils/dom";
 
+const clearBtn = document.querySelector(".clear-btn");
+
+clearBtn.addEventListener("click", () => {
+  const transaction = db.transaction(["users", "comments"], "readwrite");
+
+  transaction.oncomplete = () => {
+    console.log("DB cleared");
+  };
+
+  const userObjectStore = transaction.objectStore("users");
+  const commentsObjectStore = transaction.objectStore("comments");
+
+  userObjectStore.clear();
+  commentsObjectStore.clear();
+});
+
 const getPostWithComments = async (post) => {
   const cachedComments = await getCachedComments(post.id);
 
