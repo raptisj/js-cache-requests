@@ -58,6 +58,20 @@ const getPostDetails = (r) => {
 };
 
 window.addEventListener("load", async () => {
+  if (navigator?.storage) {
+    const required = 10; // 10 MB required
+    const estimate = await navigator.storage.estimate();
+
+    // Divide the raw value by 1024 twice to convert it from bytes to megabytes.
+    const available = Math.floor(
+      (estimate.quota - estimate.usage) / 1024 / 1024
+    );
+
+    if (available >= required) {
+      console.log("Storage is available");
+    }
+  }
+
   if (db) {
     const users = db?.transaction("users").objectStore("users").get(1);
 
