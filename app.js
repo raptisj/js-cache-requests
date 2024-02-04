@@ -29,7 +29,6 @@ const getPostWithComments = async (post) => {
     const { add } = getTransaction("comments");
 
     postComments.map((c) => add(c));
-    console.log(postComments, "postComments");
     renderComments(postComments);
   } else {
     renderComments(cachedComments);
