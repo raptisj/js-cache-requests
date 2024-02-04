@@ -1,54 +1,78 @@
 import "./style.css";
-import { db } from "./config/initIndexedDB";
-import { getTransaction } from "./utils/db";
-import { fetchAndStoreUsers, fetchUser, getCachedUser } from "./api/users";
-import { fetchPostComments, fetchPosts, getCachedComments } from "./api/posts";
 import { renderComments, renderPosts, renderUser } from "./utils/dom";
+import { BASE_URL } from "./constants";
+import { fetchPosts } from "./api/posts";
+
+const getAllUsersCacheKey = () => `${BASE_URL}/users/`;
+const getUserCacheKey = (id) => `${BASE_URL}/users/${id}`;
+const getCommentsCacheKey = (id) => `${BASE_URL}/posts/${id}/comments`;
 
 const clearBtn = document.querySelector(".clear-btn");
 
-clearBtn.addEventListener("click", () => {
-  const transaction = db.transaction(["users", "comments"], "readwrite");
+let cacheDB;
+if ("caches" in window) {
+  console.log("Cache API is supported");
+  cacheDB = await caches.open("new-cache");
+}
 
-  transaction.oncomplete = () => {
-    console.log("DB cleared");
-  };
+clearBtn.addEventListener("click", async () => {
+  const cacheKeys = await cacheDB.keys();
 
-  const userObjectStore = transaction.objectStore("users");
-  const commentsObjectStore = transaction.objectStore("comments");
+  cacheKeys.forEach((req) => {
+    cacheDB.delete(req.url);
+  });
 
-  userObjectStore.clear();
-  commentsObjectStore.clear();
+  console.log("Cache data deleted");
 });
 
 const getPostWithComments = async (post) => {
-  const cachedComments = await getCachedComments(post.id);
+  const cachedPostCommentsResponse = await cacheDB.match(
+    getCommentsCacheKey(post.id)
+  );
+  if (cachedPostCommentsResponse) {
+    const postComments = await cachedPostCommentsResponse.json();
 
-  if (!cachedComments.length) {
-    const postComments = await fetchPostComments(post.id);
-    const { add } = getTransaction("comments");
+    return renderComments(postComments);
+  }
 
-    postComments.map((c) => add(c));
-    renderComments(postComments);
-  } else {
-    renderComments(cachedComments);
+  await cacheDB.add(getCommentsCacheKey(post.id));
+  const postCommentsResponse = await cacheDB.match(
+    getCommentsCacheKey(post.id)
+  );
+
+  if (postCommentsResponse) {
+    const postComments = await postCommentsResponse.json();
+
+    return renderComments(postComments);
   }
 };
 
 const getUserById = async (id) => {
-  const cachedUser = getCachedUser(id);
+  // first make a lookup in all users array
+  const allUserResponse = await cacheDB.match(getAllUsersCacheKey());
+  if (allUserResponse) {
+    const cachedUser = await allUserResponse.json();
+    const user = cachedUser.find((u) => u.id === id);
 
-  cachedUser.onsuccess = async (e) => {
-    let user = e.target.result;
+    return renderUser(user);
+  }
 
-    if (!user) {
-      user = await fetchUser(id);
-      const { add } = getTransaction("users");
-      add(user);
-    }
+  // if for some reason the array with all users is not defined, make a lookup to find one by id
+  const singleUserResponse = await cacheDB.match(getUserCacheKey(id));
+  if (singleUserResponse) {
+    const user = await singleUserResponse.json();
 
-    renderUser(user);
-  };
+    return renderUser(user);
+  }
+
+  // if none of the above applies then fetch a new one and add it to the cache
+  await cacheDB.add(getUserCacheKey(id));
+  const userResponse = await cacheDB.match(getUserCacheKey(id));
+  if (userResponse) {
+    const user = await userResponse.json();
+
+    return renderUser(user);
+  }
 };
 
 const getPostDetails = (r) => {
@@ -71,16 +95,9 @@ window.addEventListener("load", async () => {
     }
   }
 
-  if (db) {
-    const users = db?.transaction("users").objectStore("users").get(1);
-
-    users.onsuccess = async (event) => {
-      if (!event.target.result) {
-        await fetchAndStoreUsers();
-      }
-    };
-  } else {
-    await fetchAndStoreUsers();
+  const response = await cacheDB.match(getAllUsersCacheKey());
+  if (!response) {
+    cacheDB.add(getAllUsersCacheKey());
   }
 
   const posts = await fetchPosts();
