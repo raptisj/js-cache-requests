@@ -1,72 +1,59 @@
 import "./style.css";
-import { createPostComments, createUser } from "./utils/elements";
-
-const posts = document.querySelector(".posts");
-const userDetails = document.querySelector(".user-details");
-const comments = document.querySelector(".comments");
+import { db } from "./config/initIndexedDB";
+import { getTransaction } from "./utils/db";
+import { fetchAndStoreUsers, fetchUser, getCachedUser } from "./api/users";
+import { fetchPostComments, fetchPosts, getCachedComments } from "./api/posts";
+import { renderComments, renderPosts, renderUser } from "./utils/dom";
 
 const getPostWithComments = async (post) => {
-  // TODO: cache post comments data
-  const res = await fetch(
-    `https://jsonplaceholder.typicode.com/todos/${post.id}/comments?postId=${post.id}`
-  );
+  const cachedComments = await getCachedComments(post.id);
 
-  const postCommentResults = await res.json();
+  if (!cachedComments.length) {
+    const postComments = await fetchPostComments(post.id);
+    const { add } = getTransaction("comments");
 
-  getUserById(post.userId);
-
-  if (!postCommentResults.length) {
-    return (comments.innerHTML = "");
+    postComments.map((c) => add(c));
+    console.log(postComments, "postComments");
+    renderComments(postComments);
+  } else {
+    renderComments(cachedComments);
   }
-
-  comments.innerHTML = "";
-  const { header, bodyWrapper } = createPostComments(postCommentResults);
-
-  comments.appendChild(header);
-  comments.appendChild(bodyWrapper);
 };
 
 const getUserById = async (id) => {
-  const userResponse = await fetch(
-    `https://jsonplaceholder.typicode.com/users/${id}`
-  );
-  const userResults = await userResponse.json();
+  const cachedUser = getCachedUser(id);
 
-  if (!userResults) {
-    return (userDetails.innerHTML = "");
-  }
+  cachedUser.onsuccess = async (e) => {
+    let user = e.target.result;
 
-  userDetails.innerHTML = "";
+    if (!user) {
+      user = await fetchUser(id);
+      const { add } = getTransaction("users");
+      add(user);
+    }
 
-  const { header, element } = createUser(userResults);
+    renderUser(user);
+  };
+};
 
-  userDetails.appendChild(header);
-  userDetails.appendChild(element);
+const getPostDetails = (r) => {
+  getUserById(r.userId);
+  getPostWithComments(r);
 };
 
 window.addEventListener("load", async () => {
-  const postResponse = await fetch(
-    "https://jsonplaceholder.typicode.com/todos/"
-  );
-  const postResults = await postResponse.json();
+  if (db) {
+    const users = db?.transaction("users").objectStore("users").get(1);
 
-  const userResponse = await fetch(
-    "https://jsonplaceholder.typicode.com/users/"
-  );
-  const userResults = await userResponse.json();
-  // TODO: cache post data
-  // TODO: cache user data
-
-  postResults.map((r) => {
-    const element = document.createElement("div");
-    element.classList.add("post");
-
-    const newContent = document.createTextNode(r.title);
-    element.onclick = function () {
-      getPostWithComments(r);
+    users.onsuccess = async (event) => {
+      if (!event.target.result) {
+        await fetchAndStoreUsers();
+      }
     };
+  } else {
+    await fetchAndStoreUsers();
+  }
 
-    element.appendChild(newContent);
-    posts.appendChild(element);
-  });
+  const posts = await fetchPosts();
+  renderPosts({ results: posts, onClick: getPostDetails });
 });
