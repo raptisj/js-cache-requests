@@ -2,7 +2,7 @@
 
 _WIP_
 
-This repo is for learning purposes so I can explore different ways to cache data.
+This repo is for learning purposes so I can explore different ways to cache data coming from an API.
 
 Below you will find the respective branch for each approach.
 
