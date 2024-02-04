@@ -5,7 +5,7 @@ This repo is for learning purposes so I can explore different ways to cache data
 Below you will find the respective branch for each approach.
 
 Explore with:
-- Cache API
+- [Cache API](https://github.com/raptisj/js-cache-requests/tree/cache-api)
 - **IndexedDB**(you are here!)
 - localStorage(although this is not the most optimal approach compared to the previous two)
 
