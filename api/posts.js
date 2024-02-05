@@ -1,5 +1,5 @@
 import { BASE_URL } from "../constants";
-import { getTransaction } from "../utils/db";
+import { getStore, setStore } from "../utils/db";
 
 export const fetchPosts = async () => {
   const postResponse = await fetch(`${BASE_URL}/posts/`);
@@ -8,34 +8,32 @@ export const fetchPosts = async () => {
   return postResults;
 };
 
-export const fetchPostComments = async (id) => {
-  const postCommentsResponse = await fetch(`${BASE_URL}/posts/${id}/comments`);
-  const postCommentsResults = await postCommentsResponse.json();
+export const fetchPostComments = async (postId, options = {}) => {
+  const response = await fetch(`${BASE_URL}/posts/${postId}/comments`);
+  const comments = await response.json();
 
-  return postCommentsResults;
-};
-
-export const getCachedComments = async (id) => {
-  const { getIndex } = getTransaction("comments");
-
-  const index = getIndex("postId");
-  const request = index.openCursor(id);
-
-  const comments = [];
-
-  await new Promise((resolve, reject) => {
-    request.onsuccess = (event) => {
-      const cursor = event.target.result;
-      if (cursor) {
-        comments.push(cursor.value);
-        cursor.continue();
-      } else {
-        resolve(comments);
-      }
-    };
-
-    request.onerror = (error) => reject(error);
-  });
+  if (options?.localStorage) {
+    storeComments(postId, comments);
+  }
 
   return comments;
+};
+
+export const getCachedComments = () => getStore("comments");
+export const setCachedComments = (value) => setStore("comments", value);
+
+export const storeComments = (postId, values) => {
+  const comments = getCachedComments();
+
+  if (!comments) return setCachedComments([...values]);
+
+  const commentsExists = comments.find((c) => c.postId === postId);
+  if (!commentsExists) return setCachedComments([...comments, ...values]);
+};
+
+export const getCachedCommentsPerPost = (postId) => {
+  const comments = getCachedComments();
+  const postComments = comments?.filter((c) => c.postId === postId);
+
+  return postComments?.length ? postComments : null;
 };

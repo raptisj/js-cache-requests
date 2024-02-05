@@ -1,29 +1,46 @@
 import { BASE_URL } from "../constants";
-import { getTransaction } from "../utils/db";
+import { getStore, setStore } from "../utils/db";
 
-export const fetchUsers = async () => {
-  const userResponse = await fetch(`${BASE_URL}/users/`);
-  const userResults = await userResponse.json();
+export const fetchUsers = async (options = {}) => {
+  const response = await fetch(`${BASE_URL}/users/`);
+  const users = await response.json();
 
-  return userResults;
+  if (options?.localStorage) {
+    storeUsers(users);
+  }
+
+  return users;
 };
 
-export const fetchUser = async (id) => {
-  const userResponse = await fetch(`${BASE_URL}/users/${id}`);
-  const userResults = await userResponse.json();
+export const fetchUser = async (id, options = {}) => {
+  const response = await fetch(`${BASE_URL}/users/${id}`);
+  const user = await response.json();
 
-  return userResults;
+  if (options?.localStorage) {
+    storeSingleUser(user);
+  }
+
+  return user;
 };
 
-export const fetchAndStoreUsers = async () => {
-  const userResults = await fetchUsers();
-  const { add } = getTransaction("users");
+export const getCachedUsers = () => getStore("users");
+export const setCachedUsers = (value) => setStore("users", value);
 
-  return userResults.map((u) => add(u));
+export const storeUsers = (value) => setCachedUsers(value);
+
+export const storeSingleUser = (value) => {
+  const users = getCachedUsers();
+
+  if (!users) return setCachedUsers([value]);
+
+  const userExists = users.find((u) => u.id === value.id);
+  if (!userExists) return setCachedUsers([...users, value]);
 };
 
-export const getCachedUser = (id) => {
-  const { get } = getTransaction("users");
+export const getCachedUserById = (id) => {
+  const users = getCachedUsers();
 
-  return get(id);
+  const user = users?.find((u) => u.id === id);
+
+  return user;
 };
