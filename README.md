@@ -4,6 +4,8 @@ _WIP_
 
 This repo is for learning purposes so I can explore different ways to cache data coming from an API.
 
+The main branch is just a starter with neither implementation.
+
 Below you will find the respective branch for each approach.
 
 Explore with:
