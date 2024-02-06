@@ -11,4 +11,4 @@ Explore with:
 - [IndexedDB](https://github.com/raptisj/js-cache-requests/tree/indexedDB)
 - [localStorage](https://github.com/raptisj/js-cache-requests/tree/local-storage)(although this is not the most optimal approach compared to the previous two)
 
-A combination of all the above can be found in the [storage-strategy](https://github.com/raptisj/js-cache-requests/tree/storage-strategy) branch. (WIP)
+A combination of all the above can be found in the [storage-strategy](https://github.com/raptisj/js-cache-requests/tree/storage-strategy) branch.
