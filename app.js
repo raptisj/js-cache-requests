@@ -1,54 +1,56 @@
 import "./style.css";
-import { db } from "./config/initIndexedDB";
-import { getTransaction } from "./utils/db";
-import { fetchAndStoreUsers, fetchUser, getCachedUser } from "./api/users";
-import { fetchPostComments, fetchPosts, getCachedComments } from "./api/posts";
+import { userApi, postApi } from "./api";
 import { renderComments, renderPosts, renderUser } from "./utils/dom";
 
-const clearBtn = document.querySelector(".clear-btn");
+const STORAGE_STRATEGY = "indexed_db";
+const {
+  fetchUsers,
+  fetchUser,
+  getCachedUser,
+  getCachedUsers,
+  clearCachedUsers,
+} = userApi({
+  storageStrategy: STORAGE_STRATEGY,
+});
 
-clearBtn.addEventListener("click", () => {
-  const transaction = db.transaction(["users", "comments"], "readwrite");
+const {
+  fetchPosts,
+  fetchPostComments,
+  getCachedComments,
+  clearCachedComments,
+} = postApi({
+  storageStrategy: STORAGE_STRATEGY,
+});
 
-  transaction.oncomplete = () => {
-    console.log("DB cleared");
-  };
+const clearButton = document.querySelector(".clear-btn");
 
-  const userObjectStore = transaction.objectStore("users");
-  const commentsObjectStore = transaction.objectStore("comments");
-
-  userObjectStore.clear();
-  commentsObjectStore.clear();
+clearButton.addEventListener("click", () => {
+  clearCachedUsers();
+  clearCachedComments();
 });
 
 const getPostWithComments = async (post) => {
   const cachedComments = await getCachedComments(post.id);
 
-  if (!cachedComments.length) {
-    const postComments = await fetchPostComments(post.id);
-    const { add } = getTransaction("comments");
+  let postComments = cachedComments;
 
-    postComments.map((c) => add(c));
-    renderComments(postComments);
-  } else {
-    renderComments(cachedComments);
+  if (!postComments || !postComments.length) {
+    postComments = await fetchPostComments(post.id);
   }
+
+  renderComments(postComments);
 };
 
 const getUserById = async (id) => {
-  const cachedUser = getCachedUser(id);
+  const cachedUser = await getCachedUser(id);
 
-  cachedUser.onsuccess = async (e) => {
-    let user = e.target.result;
+  let user = cachedUser;
 
-    if (!user) {
-      user = await fetchUser(id);
-      const { add } = getTransaction("users");
-      add(user);
-    }
+  if (!user) {
+    user = await fetchUser(id);
+  }
 
-    renderUser(user);
-  };
+  renderUser(user);
 };
 
 const getPostDetails = (r) => {
@@ -71,16 +73,9 @@ window.addEventListener("load", async () => {
     }
   }
 
-  if (db) {
-    const users = db?.transaction("users").objectStore("users").get(1);
-
-    users.onsuccess = async (event) => {
-      if (!event.target.result) {
-        await fetchAndStoreUsers();
-      }
-    };
-  } else {
-    await fetchAndStoreUsers();
+  const hasCachedUsers = await getCachedUsers();
+  if (!hasCachedUsers) {
+    await fetchUsers();
   }
 
   const posts = await fetchPosts();

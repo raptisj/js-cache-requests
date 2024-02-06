@@ -1,41 +1,56 @@
 import { BASE_URL } from "../constants";
-import { getTransaction } from "../utils/db";
+import {
+  getCachedArrayData as idb_getCachedArrayData,
+  getTransaction,
+} from "../libs/indexed-db";
 
-export const fetchPosts = async () => {
-  const postResponse = await fetch(`${BASE_URL}/posts/`);
-  const postResults = await postResponse.json();
+const fetchPosts = async () => {
+  const response = await fetch(`${BASE_URL}/posts/`);
+  const posts = await response.json();
 
-  return postResults;
+  return posts;
 };
 
-export const fetchPostComments = async (id) => {
-  const postCommentsResponse = await fetch(`${BASE_URL}/posts/${id}/comments`);
-  const postCommentsResults = await postCommentsResponse.json();
+const fetchPostComments = async (id, options = {}) => {
+  const { storageStrategy = "" } = options;
 
-  return postCommentsResults;
-};
+  const response = await fetch(`${BASE_URL}/posts/${id}/comments`);
+  const comments = await response.json();
 
-export const getCachedComments = async (id) => {
-  const { getIndex } = getTransaction("comments");
-
-  const index = getIndex("postId");
-  const request = index.openCursor(id);
-
-  const comments = [];
-
-  await new Promise((resolve, reject) => {
-    request.onsuccess = (event) => {
-      const cursor = event.target.result;
-      if (cursor) {
-        comments.push(cursor.value);
-        cursor.continue();
-      } else {
-        resolve(comments);
-      }
-    };
-
-    request.onerror = (error) => reject(error);
-  });
+  if (storageStrategy === "indexed_db") {
+    const { add } = getTransaction("comments");
+    comments.map((c) => add(c));
+  }
 
   return comments;
+};
+
+const getCachedComments = async (postId, options = {}) => {
+  const { storageStrategy = "" } = options;
+  let data = null;
+
+  if (storageStrategy === "indexed_db") {
+    data = idb_getCachedArrayData("comments", postId, "postId");
+  }
+
+  return data;
+};
+
+const clearCachedComments = (options = {}) => {
+  const { storageStrategy = "" } = options;
+
+  if (storageStrategy === "indexed_db") {
+    return idb_clearCacheData("comments");
+  }
+
+  return null;
+};
+
+export const postApi = (options = {}) => {
+  return {
+    fetchPosts,
+    fetchPostComments: (id) => fetchPostComments(id, options),
+    getCachedComments: (id) => getCachedComments(id, options),
+    clearCachedComments: () => clearCachedComments(options),
+  };
 };

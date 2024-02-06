@@ -1,29 +1,78 @@
 import { BASE_URL } from "../constants";
-import { getTransaction } from "../utils/db";
+import {
+  getSingleCachedResourse as idb_getSingleCachedResourse,
+  getTransaction as idb_getTransaction,
+  getCachedData as idb_getCachedData,
+  clearCacheData as idb_clearCacheData,
+} from "../libs/indexed-db";
 
-export const fetchUsers = async () => {
-  const userResponse = await fetch(`${BASE_URL}/users/`);
-  const userResults = await userResponse.json();
+const fetchUsers = async (options = {}) => {
+  const { storageStrategy = "" } = options;
 
-  return userResults;
+  const response = await fetch(`${BASE_URL}/users/`);
+  const users = await response.json();
+
+  if (storageStrategy === "indexed_db") {
+    const { add } = idb_getTransaction("users");
+    users.map((u) => add(u));
+  }
+
+  return users;
 };
 
-export const fetchUser = async (id) => {
-  const userResponse = await fetch(`${BASE_URL}/users/${id}`);
-  const userResults = await userResponse.json();
+const fetchUser = async (id, options = {}) => {
+  const { storageStrategy = "" } = options;
 
-  return userResults;
+  const response = await fetch(`${BASE_URL}/users/${id}`);
+  const user = await response.json();
+
+  if (storageStrategy === "indexed_db") {
+    const { add } = idb_getTransaction("users");
+    add(user);
+  }
+
+  return user;
 };
 
-export const fetchAndStoreUsers = async () => {
-  const userResults = await fetchUsers();
-  const { add } = getTransaction("users");
+const getCachedUser = async (id, options = {}) => {
+  const { storageStrategy = "" } = options;
+  let data = null;
 
-  return userResults.map((u) => add(u));
+  if (storageStrategy === "indexed_db") {
+    data = idb_getSingleCachedResourse("users", id);
+  }
+
+  return data;
 };
 
-export const getCachedUser = (id) => {
-  const { get } = getTransaction("users");
+const getCachedUsers = async (options = {}) => {
+  const { storageStrategy = "" } = options;
 
-  return get(id);
+  let isEmpty = false;
+
+  if (storageStrategy === "indexed_db") {
+    isEmpty = await idb_getCachedData("users");
+  }
+
+  return isEmpty;
+};
+
+const clearCachedUsers = (options = {}) => {
+  const { storageStrategy = "" } = options;
+
+  if (storageStrategy === "indexed_db") {
+    return idb_clearCacheData("users");
+  }
+
+  return null;
+};
+
+export const userApi = (options = {}) => {
+  return {
+    fetchUsers: () => fetchUsers(options),
+    fetchUser: (id) => fetchUser(id, options),
+    getCachedUser: (id) => getCachedUser(id, options),
+    getCachedUsers: () => getCachedUsers(options),
+    clearCachedUsers: () => clearCachedUsers(options),
+  };
 };
