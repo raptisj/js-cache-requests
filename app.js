@@ -1,8 +1,9 @@
 import "./style.css";
 import { userApi, postApi } from "./api";
 import { renderComments, renderPosts, renderUser } from "./utils/dom";
+import { bytesToMegabytes, getStorageLimit } from "./utils/storage";
 
-const STORAGE_STRATEGY = "indexed_db";
+const STORAGE_STRATEGY = "cache_api";
 const {
   fetchUsers,
   fetchUser,
@@ -60,13 +61,10 @@ const getPostDetails = (r) => {
 
 window.addEventListener("load", async () => {
   if (navigator?.storage) {
-    const required = 10; // 10 MB required
+    const required = getStorageLimit(STORAGE_STRATEGY);
     const estimate = await navigator.storage.estimate();
 
-    // Divide the raw value by 1024 twice to convert it from bytes to megabytes.
-    const available = Math.floor(
-      (estimate.quota - estimate.usage) / 1024 / 1024
-    );
+    const available = bytesToMegabytes(estimate);
 
     if (available >= required) {
       console.log("Storage is available");
