@@ -7,7 +7,7 @@ Below you will find the respective branch for each approach.
 Explore with:
 - [Cache API](https://github.com/raptisj/js-cache-requests/tree/cache-api)
 - **IndexedDB**(you are here!)
-- localStorage(although this is not the most optimal approach compared to the previous two)
+- [localStorage](https://github.com/raptisj/js-cache-requests/tree/local-storage)(although this is not the most optimal approach compared to the previous two)
 
 ## Demo 
 (sorry for the bad video quality 🙃)
