@@ -1,6 +1,6 @@
 import { db } from "../config";
 
-export const getTransaction = (store) => {
+const getTransaction = (store) => {
   const transaction = db?.transaction(store, "readwrite");
   const objectStore = transaction?.objectStore(store);
 
@@ -9,38 +9,21 @@ export const getTransaction = (store) => {
     getIndex: (payload) => objectStore.index(payload),
     get: (payload) => objectStore?.get(payload),
     getAll: () => objectStore?.getAll(),
+    getObjectStore: () => objectStore,
   };
 };
 
-export const getCachedData = async (store) => {
-  const { getAll } = getTransaction(store);
-  const request = getAll();
-  let isEmpty = false;
+const getCachedArrayData = async (store, id, indexName) => {
+  const { getIndex, getObjectStore } = getTransaction(store);
 
+  const index = indexName ? getIndex(indexName) : null;
+  const request =
+    index && id ? index.openCursor(id) : getObjectStore()?.openCursor();
+
+  // for the edge case where a user deletes a connection manually from the console's Application tab
   if (!request) {
-    return false;
+    return [];
   }
-
-  isEmpty = await new Promise((resolve, reject) => {
-    request.onsuccess = async (event) => {
-      if (!event.target.result.length) {
-        resolve(false);
-      } else {
-        resolve(true);
-      }
-    };
-
-    request.onerror = (error) => reject(error);
-  });
-
-  return isEmpty;
-};
-
-export const getCachedArrayData = async (store, id, indexName) => {
-  const { getIndex } = getTransaction(store);
-
-  const index = getIndex(indexName);
-  const request = index.openCursor(id);
 
   const results = [];
 
@@ -61,7 +44,7 @@ export const getCachedArrayData = async (store, id, indexName) => {
   return results;
 };
 
-export const getSingleCachedResourse = async (store, id) => {
+const getSingleCachedResourse = async (store, id) => {
   const { get } = getTransaction(store);
   const request = get(id);
 
@@ -80,7 +63,7 @@ export const getSingleCachedResourse = async (store, id) => {
   return data;
 };
 
-export const clearCacheData = (store) => {
+const clearCacheData = (store) => {
   const transaction = db.transaction(store, "readwrite");
 
   transaction.oncomplete = () => {
@@ -89,4 +72,11 @@ export const clearCacheData = (store) => {
 
   const objectStore = transaction.objectStore(store);
   objectStore.clear();
+};
+
+export const indexedDb = {
+  getTransaction,
+  getCachedArrayData,
+  getSingleCachedResourse,
+  clearCacheData,
 };

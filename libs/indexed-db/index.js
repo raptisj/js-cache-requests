@@ -1,4 +1,4 @@
-import { db } from "./config";
+import { initIndexedDB } from "./config";
 
+export { initIndexedDB };
 export * from "./utils";
-export { db };

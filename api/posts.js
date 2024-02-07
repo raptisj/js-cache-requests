@@ -1,13 +1,7 @@
 import { BASE_URL } from "../constants";
-import {
-  getTransaction as cacheApi_getTransaction,
-  clearCacheData as cacheApi_clearCacheData,
-  storeResource as cacheApi_storeResource,
-} from "../libs/cache-api";
-import {
-  getCachedArrayData as idb_getCachedArrayData,
-  getTransaction,
-} from "../libs/indexed-db";
+
+import { cacheApi } from "../libs/cache-api";
+import { indexedDb } from "../libs/indexed-db";
 
 const getPostsCacheKey = () => `${BASE_URL}/posts`;
 const getCommentsCacheKey = (id) => `${BASE_URL}/posts/${id}/comments`;
@@ -23,8 +17,8 @@ const fetchPostComments = async (id, options = {}) => {
   const { storageStrategy = "" } = options;
 
   if (storageStrategy === "cache_api") {
-    await cacheApi_storeResource(getCommentsCacheKey(id));
-    const response = await cacheApi_getTransaction(getCommentsCacheKey(id));
+    await cacheApi.storeResource(getCommentsCacheKey(id));
+    const response = await cacheApi.getTransaction(getCommentsCacheKey(id));
 
     return response;
   }
@@ -33,7 +27,7 @@ const fetchPostComments = async (id, options = {}) => {
   const comments = await response.json();
 
   if (storageStrategy === "indexed_db") {
-    const { add } = getTransaction("comments");
+    const { add } = indexedDb.getTransaction("comments");
     comments.map((c) => add(c));
   }
 
@@ -45,13 +39,13 @@ const getCachedComments = async (postId, options = {}) => {
   let data = null;
 
   if (storageStrategy === "cache_api") {
-    const response = await cacheApi_getTransaction(getCommentsCacheKey(postId));
+    const response = await cacheApi.getTransaction(getCommentsCacheKey(postId));
 
     return response;
   }
 
   if (storageStrategy === "indexed_db") {
-    data = idb_getCachedArrayData("comments", postId, "postId");
+    data = indexedDb.getCachedArrayData("comments", postId, "postId");
   }
 
   return data;
@@ -61,11 +55,11 @@ const clearCachedComments = (options = {}) => {
   const { storageStrategy = "" } = options;
 
   if (storageStrategy === "cache_api") {
-    return cacheApi_clearCacheData("comments");
+    return cacheApi.clearCacheData("comments");
   }
 
   if (storageStrategy === "indexed_db") {
-    return idb_clearCacheData("comments");
+    return indexedDb.clearCacheData("comments");
   }
 
   return null;

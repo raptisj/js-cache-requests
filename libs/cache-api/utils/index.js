@@ -1,6 +1,6 @@
 import { cacheDB } from "../config";
 
-export const getTransaction = async (key) => {
+const getTransaction = async (key) => {
   const response = await cacheDB.match(key);
 
   if (response) {
@@ -10,13 +10,13 @@ export const getTransaction = async (key) => {
   return response;
 };
 
-export const storeResource = (key) => {
+const storeResource = (key) => {
   const response = cacheDB.add(key);
 
   return response;
 };
 
-export const getSingleResource = async (id, allKey, key) => {
+const getSingleResource = async (id, allKey, key) => {
   const allUserResponse = await cacheDB.match(allKey);
 
   if (allUserResponse) {
@@ -36,7 +36,7 @@ export const getSingleResource = async (id, allKey, key) => {
   return null;
 };
 
-export const clearCacheData = async (store) => {
+const clearCacheData = async (store) => {
   const cacheKeys = await cacheDB.keys();
 
   cacheKeys.forEach((req) => {
@@ -44,4 +44,11 @@ export const clearCacheData = async (store) => {
       cacheDB.delete(req.url);
     }
   });
+};
+
+export const cacheApi = {
+  getTransaction,
+  storeResource,
+  getSingleResource,
+  clearCacheData,
 };

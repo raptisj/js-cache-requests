@@ -2,8 +2,24 @@ import "./style.css";
 import { userApi, postApi } from "./api";
 import { renderComments, renderPosts, renderUser } from "./utils/dom";
 import { bytesToMegabytes, getStorageLimit } from "./utils/storage";
+import { initIndexedDB } from "./libs/indexed-db";
 
-const STORAGE_STRATEGY = "cache_api";
+const storageStrategy = await initIndexedDB({
+  connectionName: "js-cache-requests",
+  version: 1,
+  stores: [
+    {
+      name: "users",
+      keyPath: "id",
+    },
+    {
+      name: "comments",
+      keyPath: "id",
+      index: "postId",
+    },
+  ],
+});
+
 const {
   fetchUsers,
   fetchUser,
@@ -11,7 +27,7 @@ const {
   getCachedUsers,
   clearCachedUsers,
 } = userApi({
-  storageStrategy: STORAGE_STRATEGY,
+  storageStrategy,
 });
 
 const {
@@ -20,7 +36,7 @@ const {
   getCachedComments,
   clearCachedComments,
 } = postApi({
-  storageStrategy: STORAGE_STRATEGY,
+  storageStrategy,
 });
 
 const clearButton = document.querySelector(".clear-btn");
@@ -61,7 +77,7 @@ const getPostDetails = (r) => {
 
 window.addEventListener("load", async () => {
   if (navigator?.storage) {
-    const required = getStorageLimit(STORAGE_STRATEGY);
+    const required = getStorageLimit(storageStrategy);
     const estimate = await navigator.storage.estimate();
 
     const available = bytesToMegabytes(estimate);
@@ -71,8 +87,8 @@ window.addEventListener("load", async () => {
     }
   }
 
-  const hasCachedUsers = await getCachedUsers();
-  if (!hasCachedUsers) {
+  const cachedUsers = await getCachedUsers();
+  if (!cachedUsers || !cachedUsers.length) {
     await fetchUsers();
   }
 

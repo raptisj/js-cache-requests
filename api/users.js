@@ -1,16 +1,7 @@
 import { BASE_URL } from "../constants";
-import {
-  getTransaction as cacheApi_getTransaction,
-  storeResource as cacheApi_storeResource,
-  getSingleResource as cacheApi_getSingleResource,
-  clearCacheData as cacheApi_clearCacheData,
-} from "../libs/cache-api";
-import {
-  getSingleCachedResourse as idb_getSingleCachedResourse,
-  getTransaction as idb_getTransaction,
-  getCachedData as idb_getCachedData,
-  clearCacheData as idb_clearCacheData,
-} from "../libs/indexed-db";
+
+import { cacheApi } from "../libs/cache-api";
+import { indexedDb } from "../libs/indexed-db";
 
 const getAllUsersCacheKey = () => `${BASE_URL}/users/`;
 const getUserCacheKey = (id) => `${BASE_URL}/users/${id}`;
@@ -19,7 +10,7 @@ const fetchUsers = async (options = {}) => {
   const { storageStrategy = "" } = options;
 
   if (storageStrategy === "cache_api") {
-    const response = await cacheApi_storeResource(getAllUsersCacheKey());
+    const response = await cacheApi.storeResource(getAllUsersCacheKey());
 
     return response;
   }
@@ -28,7 +19,7 @@ const fetchUsers = async (options = {}) => {
   const users = await response.json();
 
   if (storageStrategy === "indexed_db") {
-    const { add } = idb_getTransaction("users");
+    const { add } = indexedDb.getTransaction("users");
     users.map((u) => add(u));
   }
 
@@ -39,8 +30,8 @@ const fetchUser = async (id, options = {}) => {
   const { storageStrategy = "" } = options;
 
   if (storageStrategy === "cache_api") {
-    await cacheApi_storeResource(getUserCacheKey(id));
-    const userResponse = await cacheApi_getTransaction(getUserCacheKey(id));
+    await cacheApi.storeResource(getUserCacheKey(id));
+    const userResponse = await cacheApi.getTransaction(getUserCacheKey(id));
 
     if (userResponse) {
       // returning the user here in order to exit and not make the fetch request below
@@ -52,7 +43,7 @@ const fetchUser = async (id, options = {}) => {
   const user = await response.json();
 
   if (storageStrategy === "indexed_db") {
-    const { add } = idb_getTransaction("users");
+    const { add } = indexedDb.getTransaction("users");
     add(user);
   }
 
@@ -64,7 +55,7 @@ const getCachedUser = async (id, options = {}) => {
   let data = null;
 
   if (storageStrategy === "cache_api") {
-    const response = await cacheApi_getSingleResource(
+    const response = await cacheApi.getSingleResource(
       id,
       getAllUsersCacheKey(),
       getUserCacheKey(id)
@@ -74,7 +65,7 @@ const getCachedUser = async (id, options = {}) => {
   }
 
   if (storageStrategy === "indexed_db") {
-    data = idb_getSingleCachedResourse("users", id);
+    data = indexedDb.getSingleCachedResourse("users", id);
   }
 
   return data;
@@ -83,28 +74,28 @@ const getCachedUser = async (id, options = {}) => {
 const getCachedUsers = async (options = {}) => {
   const { storageStrategy = "" } = options;
 
-  let isEmpty = false;
+  let results = [];
 
   if (storageStrategy === "cache_api") {
-    isEmpty = !!(await cacheApi_getTransaction(getAllUsersCacheKey()));
+    results = await cacheApi.getTransaction(getAllUsersCacheKey());
   }
 
   if (storageStrategy === "indexed_db") {
-    isEmpty = await idb_getCachedData("users");
+    results = await indexedDb.getCachedArrayData("users");
   }
 
-  return isEmpty;
+  return results;
 };
 
 const clearCachedUsers = (options = {}) => {
   const { storageStrategy = "" } = options;
 
   if (storageStrategy === "cache_api") {
-    return cacheApi_clearCacheData("users");
+    return cacheApi.clearCacheData("users");
   }
 
   if (storageStrategy === "indexed_db") {
-    return idb_clearCacheData("users");
+    return indexedDb.clearCacheData("users");
   }
 
   return null;
