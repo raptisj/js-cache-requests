@@ -1,5 +1,9 @@
 export let cacheDB;
 
+/**
+ * @param connectionName: 'my-cache'
+ */
+
 const STORAGE_STRATEGY = "cache_api";
 export const initCacheAPI = async (options = {}) => {
   const { connectionName } = options;

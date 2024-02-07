@@ -1,6 +1,18 @@
 export let db;
 let request;
 
+/**
+  @param connectionName: "js-cache-requests",
+  @param version: 1,
+  @param stores: [
+    {
+      @param name: "comments",
+      @param keyPath: "id",
+      @param index: "postId",
+    },
+  ],
+ * 
+ */
 const STORAGE_STRATEGY = "indexed_db";
 export const initIndexedDB = async (options = {}) => {
   const { connectionName, version, stores } = options;

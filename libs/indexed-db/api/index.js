@@ -74,7 +74,7 @@ const clearCacheData = (store) => {
   objectStore.clear();
 };
 
-export const indexedDb = {
+export const indexedDB = {
   getTransaction,
   getCachedArrayData,
   getSingleCachedResourse,

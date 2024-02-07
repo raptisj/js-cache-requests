@@ -1,7 +1,8 @@
 import { BASE_URL } from "../constants";
 
 import { cacheApi } from "../libs/cache-api";
-import { indexedDb } from "../libs/indexed-db";
+import { indexedDB } from "../libs/indexed-db";
+import { localStorageDB } from "../libs/local-storage";
 
 const getPostsCacheKey = () => `${BASE_URL}/posts`;
 const getCommentsCacheKey = (id) => `${BASE_URL}/posts/${id}/comments`;
@@ -27,8 +28,12 @@ const fetchPostComments = async (id, options = {}) => {
   const comments = await response.json();
 
   if (storageStrategy === "indexed_db") {
-    const { add } = indexedDb.getTransaction("comments");
+    const { add } = indexedDB.getTransaction("comments");
     comments.map((c) => add(c));
+  }
+
+  if (storageStrategy === "local_storage") {
+    localStorageDB.appendManyResources("comments", id, comments);
   }
 
   return comments;
@@ -45,7 +50,11 @@ const getCachedComments = async (postId, options = {}) => {
   }
 
   if (storageStrategy === "indexed_db") {
-    data = indexedDb.getCachedArrayData("comments", postId, "postId");
+    data = indexedDB.getCachedArrayData("comments", postId, "postId");
+  }
+
+  if (storageStrategy === "local_storage") {
+    data = localStorageDB.getManyById("comments", postId);
   }
 
   return data;
@@ -59,7 +68,11 @@ const clearCachedComments = (options = {}) => {
   }
 
   if (storageStrategy === "indexed_db") {
-    return indexedDb.clearCacheData("comments");
+    return indexedDB.clearCacheData("comments");
+  }
+
+  if (storageStrategy === "local_storage") {
+    return localStorageDB.clearCacheData("comments");
   }
 
   return null;

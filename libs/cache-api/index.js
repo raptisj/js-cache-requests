@@ -1,4 +1,4 @@
 import { initCacheAPI } from "./config";
 
 export { initCacheAPI };
-export * from "./utils";
+export * from "./api";

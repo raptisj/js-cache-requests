@@ -1,7 +1,8 @@
 import { BASE_URL } from "../constants";
 
 import { cacheApi } from "../libs/cache-api";
-import { indexedDb } from "../libs/indexed-db";
+import { indexedDB } from "../libs/indexed-db";
+import { localStorageDB } from "../libs/local-storage/utils";
 
 const getAllUsersCacheKey = () => `${BASE_URL}/users/`;
 const getUserCacheKey = (id) => `${BASE_URL}/users/${id}`;
@@ -19,8 +20,12 @@ const fetchUsers = async (options = {}) => {
   const users = await response.json();
 
   if (storageStrategy === "indexed_db") {
-    const { add } = indexedDb.getTransaction("users");
+    const { add } = indexedDB.getTransaction("users");
     users.map((u) => add(u));
+  }
+
+  if (storageStrategy === "local_storage") {
+    localStorageDB.setStore("users", users);
   }
 
   return users;
@@ -43,8 +48,12 @@ const fetchUser = async (id, options = {}) => {
   const user = await response.json();
 
   if (storageStrategy === "indexed_db") {
-    const { add } = indexedDb.getTransaction("users");
+    const { add } = indexedDB.getTransaction("users");
     add(user);
+  }
+
+  if (storageStrategy === "local_storage") {
+    localStorageDB.appendSingleResource("users", user);
   }
 
   return user;
@@ -65,7 +74,11 @@ const getCachedUser = async (id, options = {}) => {
   }
 
   if (storageStrategy === "indexed_db") {
-    data = indexedDb.getSingleCachedResourse("users", id);
+    data = indexedDB.getSingleCachedResourse("users", id);
+  }
+
+  if (storageStrategy === "local_storage") {
+    data = localStorageDB.getSingleResource("users", id);
   }
 
   return data;
@@ -81,7 +94,11 @@ const getCachedUsers = async (options = {}) => {
   }
 
   if (storageStrategy === "indexed_db") {
-    results = await indexedDb.getCachedArrayData("users");
+    results = await indexedDB.getCachedArrayData("users");
+  }
+
+  if (storageStrategy === "local_storage") {
+    results = localStorageDB.getStore("users");
   }
 
   return results;
@@ -95,7 +112,11 @@ const clearCachedUsers = (options = {}) => {
   }
 
   if (storageStrategy === "indexed_db") {
-    return indexedDb.clearCacheData("users");
+    return indexedDB.clearCacheData("users");
+  }
+
+  if (storageStrategy === "local_storage") {
+    return localStorageDB.clearCacheData("users");
   }
 
   return null;
