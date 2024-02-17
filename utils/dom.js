@@ -5,43 +5,43 @@ const userDetails = document.querySelector(".user-details");
 const comments = document.querySelector(".comments");
 
 export const renderUser = (userResults) => {
-	if (!userResults) {
-		userDetails.innerHTML = "";
-		return;
-	}
+  if (!userResults) {
+    userDetails.innerHTML = "";
+    return;
+  }
 
-	userDetails.innerHTML = "";
+  userDetails.innerHTML = "";
 
-	const { header, element } = createUser(userResults);
+  const { header, element } = createUser(userResults);
 
-	userDetails.appendChild(header);
-	userDetails.appendChild(element);
+  userDetails.appendChild(header);
+  userDetails.appendChild(element);
 };
 
 export const renderPosts = ({ results, onClick }) => {
-	results.map((r) => {
-		const element = document.createElement("div");
-		element.classList.add("post");
+  results.map((r) => {
+    const element = document.createElement("div");
+    element.classList.add("post");
 
-		const newContent = document.createTextNode(r.title);
-		element.onclick = () => {
-			onClick(r);
-		};
+    const newContent = document.createTextNode(r.title);
+    element.onclick = () => {
+      onClick(r);
+    };
 
-		element.appendChild(newContent);
-		posts.appendChild(element);
-	});
+    element.appendChild(newContent);
+    posts.appendChild(element);
+  });
 };
 
 export const renderComments = (postComments) => {
-	if (!postComments.length) {
-		comments.innerHTML = "";
-		return;
-	}
+  if (!postComments.length) {
+    comments.innerHTML = "";
+    return;
+  }
 
-	comments.innerHTML = "";
-	const { header, bodyWrapper } = createPostComments(postComments);
+  comments.innerHTML = "";
+  const { header, bodyWrapper } = createPostComments(postComments);
 
-	comments.appendChild(header);
-	comments.appendChild(bodyWrapper);
+  comments.appendChild(header);
+  comments.appendChild(bodyWrapper);
 };

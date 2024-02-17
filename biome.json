@@ -1,42 +1,46 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
-	"organizeImports": {
-		"enabled": true
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"complexity": {
-				"noForEach": "off",
-				"noExcessiveCognitiveComplexity": {
-					"level": "error",
-					"options": {
-						"maxAllowedComplexity": 10
-					}
-				},
-				"useSimplifiedLogicExpression": "error"
-			},
-			"nursery": {
-				"noUnusedImports": "error"
-			},
-			"correctness": {
-				"noUnusedVariables": "error",
-				"noUndeclaredVariables": "error",
-				"useHookAtTopLevel": "error"
-			},
-			"suspicious": {
-				"noApproximativeNumericConstant": "error",
-				"noMisrefactoredShorthandAssign": "error"
-			}
-		}
-	},
-	"formatter": {
-		"enabled": true,
-		"formatWithErrors": false,
-		"indentStyle": "tab",
-		"indentWidth": 2,
-		"lineWidth": 80,
-		"lineEnding": "lf"
-	}
+  "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noForEach": "off",
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": {
+            "maxAllowedComplexity": 10
+          }
+        },
+        "useSimplifiedLogicExpression": "error"
+      },
+      "nursery": {
+        "noUnusedImports": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUndeclaredVariables": "error",
+        "useHookAtTopLevel": "error",
+        "useExhaustiveDependencies": "off"
+      },
+      "suspicious": {
+        "noApproximativeNumericConstant": "error",
+        "noMisrefactoredShorthandAssign": "error"
+      },
+      "a11y": {
+        "useKeyWithClickEvents": "off"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "lineEnding": "lf"
+  }
 }
