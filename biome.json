@@ -30,5 +30,13 @@
 				"noMisrefactoredShorthandAssign": "error"
 			}
 		}
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineWidth": 80,
+		"lineEnding": "lf"
 	}
 }
