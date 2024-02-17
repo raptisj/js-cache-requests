@@ -1,0 +1,34 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"complexity": {
+				"noForEach": "off",
+				"noExcessiveCognitiveComplexity": {
+					"level": "error",
+					"options": {
+						"maxAllowedComplexity": 10
+					}
+				},
+				"useSimplifiedLogicExpression": "error"
+			},
+			"nursery": {
+				"noUnusedImports": "error"
+			},
+			"correctness": {
+				"noUnusedVariables": "error",
+				"noUndeclaredVariables": "error",
+				"useHookAtTopLevel": "error"
+			},
+			"suspicious": {
+				"noApproximativeNumericConstant": "error",
+				"noMisrefactoredShorthandAssign": "error"
+			}
+		}
+	}
+}

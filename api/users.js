@@ -8,126 +8,126 @@ const getAllUsersCacheKey = () => `${BASE_URL}/users/`;
 const getUserCacheKey = (id) => `${BASE_URL}/users/${id}`;
 
 const fetchUsers = async (options = {}) => {
-  const { storageStrategy = "" } = options;
+	const { storageStrategy = "" } = options;
 
-  if (storageStrategy === "cache_api") {
-    const response = await cacheApi.storeResource(getAllUsersCacheKey());
+	if (storageStrategy === "cache_api") {
+		const response = await cacheApi.storeResource(getAllUsersCacheKey());
 
-    return response;
-  }
+		return response;
+	}
 
-  const response = await fetch(getAllUsersCacheKey());
-  const users = await response.json();
+	const response = await fetch(getAllUsersCacheKey());
+	const users = await response.json();
 
-  if (storageStrategy === "indexed_db") {
-    const { add } = indexedDB.getTransaction("users");
-    users.map((u) => add(u));
-  }
+	if (storageStrategy === "indexed_db") {
+		const { add } = indexedDB.getTransaction("users");
+		users.map((u) => add(u));
+	}
 
-  if (storageStrategy === "local_storage") {
-    localStorageDB.setStore("users", users);
-  }
+	if (storageStrategy === "local_storage") {
+		localStorageDB.setStore("users", users);
+	}
 
-  return users;
+	return users;
 };
 
 const fetchUser = async (id, options = {}) => {
-  const { storageStrategy = "" } = options;
+	const { storageStrategy = "" } = options;
 
-  if (storageStrategy === "cache_api") {
-    await cacheApi.storeResource(getUserCacheKey(id));
-    const userResponse = await cacheApi.getTransaction(getUserCacheKey(id));
+	if (storageStrategy === "cache_api") {
+		await cacheApi.storeResource(getUserCacheKey(id));
+		const userResponse = await cacheApi.getTransaction(getUserCacheKey(id));
 
-    if (userResponse) {
-      // returning the user here in order to exit and not make the fetch request below
-      return userResponse;
-    }
-  }
+		if (userResponse) {
+			// returning the user here in order to exit and not make the fetch request below
+			return userResponse;
+		}
+	}
 
-  const response = await fetch(getUserCacheKey(id));
-  const user = await response.json();
+	const response = await fetch(getUserCacheKey(id));
+	const user = await response.json();
 
-  if (storageStrategy === "indexed_db") {
-    const { add } = indexedDB.getTransaction("users");
-    add(user);
-  }
+	if (storageStrategy === "indexed_db") {
+		const { add } = indexedDB.getTransaction("users");
+		add(user);
+	}
 
-  if (storageStrategy === "local_storage") {
-    localStorageDB.appendSingleResource("users", user);
-  }
+	if (storageStrategy === "local_storage") {
+		localStorageDB.appendSingleResource("users", user);
+	}
 
-  return user;
+	return user;
 };
 
 const getCachedUser = async (id, options = {}) => {
-  const { storageStrategy = "" } = options;
-  let data = null;
+	const { storageStrategy = "" } = options;
+	let data = null;
 
-  if (storageStrategy === "cache_api") {
-    const response = await cacheApi.getSingleResource(
-      id,
-      getAllUsersCacheKey(),
-      getUserCacheKey(id)
-    );
+	if (storageStrategy === "cache_api") {
+		const response = await cacheApi.getSingleResource(
+			id,
+			getAllUsersCacheKey(),
+			getUserCacheKey(id),
+		);
 
-    return response;
-  }
+		return response;
+	}
 
-  if (storageStrategy === "indexed_db") {
-    data = indexedDB.getSingleCachedResourse("users", id);
-  }
+	if (storageStrategy === "indexed_db") {
+		data = indexedDB.getSingleCachedResourse("users", id);
+	}
 
-  if (storageStrategy === "local_storage") {
-    data = localStorageDB.getSingleResource("users", id);
-  }
+	if (storageStrategy === "local_storage") {
+		data = localStorageDB.getSingleResource("users", id);
+	}
 
-  return data;
+	return data;
 };
 
 const getCachedUsers = async (options = {}) => {
-  const { storageStrategy = "" } = options;
+	const { storageStrategy = "" } = options;
 
-  let results = [];
+	let results = [];
 
-  if (storageStrategy === "cache_api") {
-    results = await cacheApi.getTransaction(getAllUsersCacheKey());
-  }
+	if (storageStrategy === "cache_api") {
+		results = await cacheApi.getTransaction(getAllUsersCacheKey());
+	}
 
-  if (storageStrategy === "indexed_db") {
-    results = await indexedDB.getCachedArrayData("users");
-  }
+	if (storageStrategy === "indexed_db") {
+		results = await indexedDB.getCachedArrayData("users");
+	}
 
-  if (storageStrategy === "local_storage") {
-    results = localStorageDB.getStore("users");
-  }
+	if (storageStrategy === "local_storage") {
+		results = localStorageDB.getStore("users");
+	}
 
-  return results;
+	return results;
 };
 
 const clearCachedUsers = (options = {}) => {
-  const { storageStrategy = "" } = options;
+	const { storageStrategy = "" } = options;
 
-  if (storageStrategy === "cache_api") {
-    return cacheApi.clearCacheData("users");
-  }
+	if (storageStrategy === "cache_api") {
+		return cacheApi.clearCacheData("users");
+	}
 
-  if (storageStrategy === "indexed_db") {
-    return indexedDB.clearCacheData("users");
-  }
+	if (storageStrategy === "indexed_db") {
+		return indexedDB.clearCacheData("users");
+	}
 
-  if (storageStrategy === "local_storage") {
-    return localStorageDB.clearCacheData("users");
-  }
+	if (storageStrategy === "local_storage") {
+		return localStorageDB.clearCacheData("users");
+	}
 
-  return null;
+	return null;
 };
 
 export const userApi = (options = {}) => {
-  return {
-    fetchUsers: () => fetchUsers(options),
-    fetchUser: (id) => fetchUser(id, options),
-    getCachedUser: (id) => getCachedUser(id, options),
-    getCachedUsers: () => getCachedUsers(options),
-    clearCachedUsers: () => clearCachedUsers(options),
-  };
+	return {
+		fetchUsers: () => fetchUsers(options),
+		fetchUser: (id) => fetchUser(id, options),
+		getCachedUser: (id) => getCachedUser(id, options),
+		getCachedUsers: () => getCachedUsers(options),
+		clearCachedUsers: () => clearCachedUsers(options),
+	};
 };
